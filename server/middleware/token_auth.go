@@ -12,7 +12,10 @@ const (
 	TokenHeaderName  = "x-auth-token"
 	ErrTokenNotFound = "The token is not found"
 
-	JitsuAnonymIDCookie = "__eventn_id"
+	JitsuAnonymIDCookie         = "__eventn_id"
+	CookieLessQueryParameter    = "cookie_less"
+	PrivacyPolicyQueryParameter = "privacy_policy"
+	IPThreeOctetsPolicy         = "ip-three-octets"
 )
 
 //extractToken return token from

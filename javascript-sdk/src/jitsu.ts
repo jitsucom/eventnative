@@ -1,16 +1,26 @@
 import {
   generateId,
   generateRandom,
+  getCookie,
   getCookieDomain,
   getCookies,
-  getCookie,
-  setCookie,
   getDataFromParams,
   getHostWithProtocol,
   parseQuery,
-  reformatDate
+  reformatDate,
+  setCookie
 } from './helpers'
-import { Event, EventCompat, EventCtx, EventPayload, EventSrc, JitsuClient, JitsuOptions, UserProps, Transport } from './interface'
+import {
+  Event,
+  EventCompat,
+  EventCtx,
+  EventPayload,
+  EventSrc,
+  JitsuClient,
+  JitsuOptions,
+  Transport,
+  UserProps
+} from './interface'
 import { getLogger, setRootLogLevel } from './log';
 
 const VERSION_INFO = {
@@ -20,7 +30,6 @@ const VERSION_INFO = {
 }
 
 const JITSU_VERSION = `${VERSION_INFO.version}/${VERSION_INFO.env}@${VERSION_INFO.date}`;
-
 
 const xmlHttpReqTransport: Transport = (url: string, json: string): Promise<void> => {
   let req = new XMLHttpRequest();
@@ -98,13 +107,11 @@ export function jitsuClient(opts?: JitsuOptions): JitsuClient {
 type PermanentProperties = {
   globalProps: Record<string, any>
   propsPerEvent: Record<string, Record<string, any>>
-
 }
 
 class JitsuClientImpl implements JitsuClient {
   private userIdPersistence?: Persistence;
   private propsPersistance?: Persistence;
-  private
 
   private anonymousId: string = '';
   private userProperties: UserProps = {}
@@ -184,9 +191,11 @@ class JitsuClientImpl implements JitsuClient {
   }
 
   sendJson(json: any): Promise<void> {
-    let url = `${this.trackingHost}/api/v1/event?token=${this.apiKey}`;
+    let cookieLess = this.initialOptions?.id_method === 'cookie-less' ? '&cookie_less=true' : ''
+    let privacyPolicy = this.initialOptions?.privacy_policy ? `&privacy_policy=${this.initialOptions.privacy_policy}` : ''
+    let url = `${this.trackingHost}/api/v1/event?token=${this.apiKey}${cookieLess}${privacyPolicy}`;
     if (this.randomizeUrl) {
-      url = `${this.trackingHost}/api.${generateRandom()}?p_${generateRandom()}=${this.apiKey}`;
+      url = `${this.trackingHost}/api.${generateRandom()}?p_${generateRandom()}=${this.apiKey}${cookieLess}${privacyPolicy}`;
     }
 
     let jsonString = JSON.stringify(json);
@@ -290,7 +299,9 @@ class JitsuClientImpl implements JitsuClient {
     if (options.segment_hook) {
       interceptSegmentCalls(this);
     }
-    this.anonymousId = this.getAnonymousId();
+    if (options.id_method !== 'cookie-less'){
+      this.anonymousId = this.getAnonymousId();
+    }
     this.initialized = true;
   }
 
@@ -335,10 +346,12 @@ class JitsuClientImpl implements JitsuClient {
   }
 
   private restoreId() {
-    if (this.userIdPersistence) {
-      let props = this.userIdPersistence.restore();
-      if (props) {
-        this.userProperties = { ...props, ...this.userProperties };
+    if (this.initialOptions?.id_method !== 'cookie-less') {
+      if (this.userIdPersistence) {
+        let props = this.userIdPersistence.restore();
+        if (props) {
+          this.userProperties = { ...props, ...this.userProperties };
+        }
       }
     }
   }

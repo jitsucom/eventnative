@@ -71,9 +71,15 @@ export type JitsuFunction = (action: 'track' | 'id' | 'set', eventType: string, 
  * User identification method:
  *  - cookie (based on cookie)
  *  - ls (localstorage)
- *  - cookie-less (without any information stored locally; currently unsupported)
+ *  - cookie-less (without any information stored locally)
  */
 export type IdMethod = 'cookie' | 'ls' | 'cookie-less'
+
+/**
+ * Privacy policy configuration:
+ *  - ip-three-octets (customer IP will be stored with '1' instead of the last octet like '10.10.10.10' -> '10.10.10.1')
+ */
+export type PrivacyPolicy = 'ip-three-octets'
 
 /**
  * Configuration options of EventNative
@@ -148,9 +154,14 @@ export type JitsuOptions = {
   capture_3rd_party_cookies?: string[] | false;
 
   /**
-   * See comment on IdMethod. Currently only 'cookie' is supported
+   * See comment on IdMethod. Currently only 'cookie' and 'cookie-less' are supported
    */
   id_method?: IdMethod
+
+  /**
+   * Privacy policy configuration. See comment on PrivacyPolicy.
+   */
+  privacy_policy?: PrivacyPolicy
 
   /**
    * Log level. 'WARN' if not set
